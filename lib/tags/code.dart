@@ -3,8 +3,7 @@ import 'package:markdown/markdown.dart' as m;
 import '../config/style_config.dart';
 
 ///Tag:  code
-InlineSpan getCodeSpan(m.Element node) =>
-    WidgetSpan(child: defaultCodeWidget(node));
+InlineSpan getCodeSpan(m.Element node) => defaultCodeSpan(node);
 
 ///the code widget
 Widget defaultCodeWidget(m.Element node) {
@@ -22,6 +21,14 @@ Widget defaultCodeWidget(m.Element node) {
       node.textContent,
       style: config?.codeStyle ?? defaultCodeStyle,
     ),
+  );
+}
+
+InlineSpan defaultCodeSpan(m.Element node){
+  final config = StyleConfig().codeConfig;
+  return TextSpan(
+    text: node.textContent,
+    style: config?.codeStyle ?? defaultCodeStyle,
   );
 }
 
