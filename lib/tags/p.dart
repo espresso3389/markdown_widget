@@ -32,17 +32,32 @@ class PWidget extends StatelessWidget {
         children, parentNode, textStyle, configSelectable, textConfig);
   }
 
-  RichText buildRichText(List<m.Node>? children, m.Node parentNode,
+  Widget buildRichText(List<m.Node>? children, m.Node parentNode,
       TextStyle? textStyle, bool selectable, TextConfig? textConfig) {
     final config = StyleConfig().pConfig;
-    return RichText(
-      softWrap: true,
-      text: getBlockSpan(
+
+    if (selectable) {
+      return SelectableText.rich(
+        getBlockSpan(
+          children,
+          parentNode,
+          textStyle ?? config?.textStyle ?? defaultPStyle,
+        ),
+        textAlign: textConfig?.textAlign ??
+            config?.textConfig?.textAlign ??
+            TextAlign.start,
+        textDirection:
+            textConfig?.textDirection ?? config?.textConfig?.textDirection,
+      );
+    }
+
+    return Text.rich(
+      getBlockSpan(
         children,
         parentNode,
         textStyle ?? config?.textStyle ?? defaultPStyle,
-        selectable: selectable,
       ),
+      softWrap: true,
       textAlign: textConfig?.textAlign ??
           config?.textConfig?.textAlign ??
           TextAlign.start,
@@ -51,9 +66,8 @@ class PWidget extends StatelessWidget {
     );
   }
 
-  InlineSpan getBlockSpan(
-      List<m.Node>? nodes, m.Node parentNode, TextStyle? parentStyle,
-      {bool selectable = true}) {
+  TextSpan getBlockSpan(
+      List<m.Node>? nodes, m.Node parentNode, TextStyle? parentStyle) {
     if (nodes == null || nodes.isEmpty) return TextSpan();
     return TextSpan(
       children: List.generate(
@@ -62,8 +76,7 @@ class PWidget extends StatelessWidget {
           bool shouldParseHtml = needParseHtml(parentNode);
           final node = nodes[index];
           if (node is m.Text)
-            return buildTextSpan(
-                node, parentStyle, shouldParseHtml, selectable);
+            return buildTextSpan(node, parentStyle, shouldParseHtml);
           else if (node is m.Element) {
             if (node.tag == code) return getCodeSpan(node);
             if (node.tag == img) return getImageSpan(node);
@@ -75,7 +88,6 @@ class PWidget extends StatelessWidget {
               node.children,
               node,
               parentStyle!.merge(getTextStyle(node.tag)),
-              selectable: selectable,
             );
           }
           return TextSpan();
@@ -84,16 +96,13 @@ class PWidget extends StatelessWidget {
     );
   }
 
-  InlineSpan buildTextSpan(m.Text node, TextStyle? parentStyle,
-      bool shouldParseHtml, bool selectable) {
+  InlineSpan buildTextSpan(
+      m.Text node, TextStyle? parentStyle, bool shouldParseHtml) {
     final nodes = shouldParseHtml ? parseHtml(node) : [];
     if (nodes.isEmpty) {
-      return selectable
-          ? WidgetSpan(child: SelectableText(node.text, style: parentStyle))
-          : TextSpan(text: node.text, style: parentStyle);
+      return TextSpan(text: node.text, style: parentStyle);
     } else {
-      return getBlockSpan(nodes as List<m.Node>?, node, parentStyle,
-          selectable: selectable);
+      return getBlockSpan(nodes as List<m.Node>?, node, parentStyle);
     }
   }
 }
